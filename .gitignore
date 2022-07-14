@@ -1,0 +1,8 @@
+#.gitignore
+*.sublime*
+__pycache__
+*.mo
+venv
+.env
+app.db
+logs
