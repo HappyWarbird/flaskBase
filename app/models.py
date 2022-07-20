@@ -59,6 +59,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
+    verified = db.Column(db.Boolean, default=False)
     password_hash = db.Column(db.String(128))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     about_me = db.Column(db.String(140))
@@ -74,6 +75,9 @@ class User(UserMixin, db.Model):
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
+
+    def set_verified(self):
+        self.verified = True
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -107,11 +111,25 @@ class User(UserMixin, db.Model):
             {'reset_password': self.id, 'exp': time() + expires_in},
             current_app.config['SECRET_KEY'], algorithm='HS256')
 
+    def get_mail_verification_token(self, expires_in=600):
+        return jwt.encode(
+            {'verify_mail': self.id, 'exp': time() + expires_in},
+            current_app.config['SECRET_KEY'], algorithm='HS256')
+
     @staticmethod
     def verify_reset_password_token(token):
         try:
             id = jwt.decode(token, current_app.config['SECRET_KEY'],
                             algorithms=['HS256'])['reset_password']
+        except:
+            return
+        return User.query.get(id)
+
+    @staticmethod
+    def verify_mail_verification_token(token):
+        try:
+            id = jwt.decode(token, current_app.config['SECRET_KEY'],
+                            algorithms=['HS256'])['verify_mail']
         except:
             return
         return User.query.get(id)

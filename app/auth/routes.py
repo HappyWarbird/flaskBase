@@ -6,7 +6,7 @@ from app import db
 from app.auth import bp
 from app.auth.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, ResetPasswordForm
 from app.models import User
-from app.auth.email import send_password_reset_email
+from app.auth.email import send_verification_mail, send_password_reset_email
 
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -18,6 +18,9 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
             flash(_('Invalid username or password'))
+            return redirect(url_for('auth.login'))
+        if user.verified is False:
+            flash(_('Please verify your email address first'))
             return redirect(url_for('auth.login'))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
@@ -43,7 +46,8 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash(_('Congratulations, you are now a registered user!'))
+        flash(_('Congratulations, you are now a registered user! Please check your email inbox to verify your address'))
+        send_verification_mail(user)
         return redirect(url_for('auth.login'))
     return render_template('register.html', title=_('Register'),
                            form=form)
@@ -79,3 +83,15 @@ def reset_password(token):
         flash(_('Your password has been reset.'))
         return redirect(url_for('auth.login'))
     return render_template('reset_password.html', form=form)
+
+@bp.route('/verify_mail/<token>')
+def verify_mail(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    user = User.verify_mail_verification_token(token)
+    if not user:
+        return redirect(url_for('main.index'))
+    user.set_verified()
+    db.session.commit()
+    flash(_('Your Email Address has been verified.'))
+    return redirect(url_for('auth.login'))

@@ -6,9 +6,19 @@ from app.email import send_email
 def send_password_reset_email(user):
     token = user.get_reset_password_token()
     send_email(_('[flaskBase] Reset Your Password'),
-               sender=current_app.config['ADMINS'][0],
-               recipients=[user.email],
-               text_body=render_template('email/reset_password.txt',
-                                         user=user, token=token),
-               html_body=render_template('email/reset_password.html',
-                                         user=user, token=token))
+                sender=current_app.config['ADMINS'][0],
+                recipients=[user.email],
+                text_body=render_template('email/reset_password.txt',
+                                        user=user, token=token),
+                html_body=render_template('email/reset_password.html',
+                                        user=user, token=token))
+
+def send_verification_mail(user):
+    token = user.get_mail_verification_token()
+    send_email(_('[flaskBase] Verify your Email Address'),
+                sender=current_app.config['ADMINS'][0],
+                recipients=[user.email],
+                text_body=render_template('email/verify_mail.txt',
+                                        user=user, token=token),
+                html_body=render_template('email/verify_mail.html',
+                                        user=user, token=token))
