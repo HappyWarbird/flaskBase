@@ -52,8 +52,7 @@ def register():
         flash(_('Congratulations, you are now a registered user! Please check your email inbox to verify your address'))
         send_verification_mail(user)
         return redirect(url_for('auth.login'))
-    return render_template('register.html', title=_('Register'),
-                           form=form)
+    return render_template('register.html', title=_('Register'), form=form)
 
 
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
@@ -65,11 +64,9 @@ def reset_password_request():
         user = User.query.filter_by(email=form.email.data).first()
         if user:
             send_password_reset_email(user)
-        flash(
-            _('Check your email for the instructions to reset your password'))
+        flash(_('Check your email for the instructions to reset your password'))
         return redirect(url_for('auth.login'))
-    return render_template('reset_password_request.html',
-                           title=_('Reset Password'), form=form)
+    return render_template('reset_password_request.html', title=_('Reset Password'), form=form)
 
 
 @bp.route('/reset_password/<token>', methods=['GET', 'POST'])
